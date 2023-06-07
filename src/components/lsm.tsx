@@ -4,13 +4,14 @@ import ButtonGroup from '@mui/material/ButtonGroup';
 import { TextField, Typography } from '@mui/material';
 
 interface DataRow {
-  x: number;
-  y: number;
+  x: number | null;
+  y: number | null;
 }
 
 const LSM: React.FC = () => {
   const [numObservations, setNumObservations] = useState(1);
-  const [data, setData] = useState<DataRow[]>([{ x: 1, y: 1 }]);
+  // Initialize data with null values
+  const [data, setData] = useState<DataRow[]>([{ x: null, y: null }]);
   const [polynomialDegree, setPolynomialDegree] = useState<string>('one');
   const [result, setResult] = useState<string>('');
 
@@ -24,7 +25,7 @@ const LSM: React.FC = () => {
         break;
       case 'two':
         const { a_0, a_1, a_2 } = handleDegreeTwo();
-        setResult('y = ' + a_2 + 'x^2 + ' + a_1 + 'x + ' + a_0);
+        setResult('y = ' + a_2 + 'x\u00B2 + ' + a_1 + 'x + ' + a_0);
 
         break;
     }
@@ -37,10 +38,12 @@ const LSM: React.FC = () => {
     let x2_sum = 0;
     //We calculate the sums
     data.forEach((row: DataRow) => {
-      x_sum += row.x;
-      y_sum += row.y;
-      xy_sum += row.x * row.y;
-      x2_sum += row.x * row.x;
+      if (row.x !== null && row.y !== null) {
+        x_sum += row.x;
+        y_sum += row.y;
+        xy_sum += row.x * row.y;
+        x2_sum += row.x * row.x;
+      }
     });
     //Find the constants from the formula:
     const a = (x2_sum * y_sum - x_sum * xy_sum) / (numObservations * x2_sum - x_sum * x_sum);
@@ -59,13 +62,15 @@ const LSM: React.FC = () => {
     let x4_sum = 0;
     //We calculate the sums
     data.forEach((row: DataRow) => {
-      x_sum += row.x;
-      y_sum += row.y;
-      xy_sum += row.x * row.y;
-      x2y_sum += row.x * row.x * row.y;
-      x2_sum += row.x * row.x;
-      x3_sum += row.x * row.x * row.x;
-      x4_sum += row.x * row.x * row.x * row.x;
+      if (row.x !== null && row.y !== null) {
+        x_sum += row.x;
+        y_sum += row.y;
+        xy_sum += row.x * row.y;
+        x2y_sum += row.x * row.x * row.y;
+        x2_sum += row.x * row.x;
+        x3_sum += row.x * row.x * row.x;
+        x4_sum += row.x * row.x * row.x * row.x;
+      }
     });
 
     //Initialize the matrix to solve with gauss-jordan
@@ -142,16 +147,19 @@ const LSM: React.FC = () => {
   }
 
   const handleObservationsChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const newNumObservations = parseInt(e.target.value);
-    setNumObservations(newNumObservations);
-
-    setData(Array.from({ length: newNumObservations }, () => ({ x: 1, y: 1 })));
+    const value = e.target.value;
+    if (value) {
+      const newNumObservations = parseInt(e.target.value);
+      setNumObservations(newNumObservations);
+      setData(Array.from({ length: newNumObservations }, () => ({ x: 1, y: 1 })));
+    }
   };
 
   const handleDataChange =
     (index: number, column: keyof DataRow) => (e: ChangeEvent<HTMLInputElement>) => {
       const newData = [...data];
-      newData[index][column] = parseInt(e.target.value);
+      // Assign a default value of 0 when the input is empty
+      newData[index][column] = e.target.value ? parseFloat(e.target.value) : null;
       setData(newData);
     };
 
@@ -161,12 +169,21 @@ const LSM: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <label>
-        Number of Observations:
-        <input type="number" value={numObservations} onChange={handleObservationsChange} />
-      </label>
-      <Typography>Polynomial degree:</Typography>
+    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <Typography variant="h6">Number of observations:</Typography>
+      <TextField
+        id="outlined-number"
+        type="number"
+        value={numObservations}
+        onChange={handleObservationsChange}
+        InputLabelProps={{
+          shrink: true,
+        }}
+        sx={{ margin: 'auto' }}
+      />
+      <Typography variant="h6" sx={{ paddingTop: '20px' }}>
+        Polynomial degree:
+      </Typography>
       <ButtonGroup
         sx={{ display: 'flex', justifyContent: 'center' }}
         aria-label="outlined primary button group"
@@ -186,8 +203,7 @@ const LSM: React.FC = () => {
           Two
         </Button>
       </ButtonGroup>
-
-      <table style={{ marginLeft: 'auto', marginRight: 'auto' }}>
+      <table style={{ marginLeft: 'auto', marginRight: 'auto', paddingTop: '20px' }}>
         <thead>
           <tr>
             <th style={{ textAlign: 'left' }}>X</th>
@@ -198,20 +214,30 @@ const LSM: React.FC = () => {
           {data.map((row, i) => (
             <tr key={i}>
               <td>
-                <input type="number" value={row.x} onChange={handleDataChange(i, 'x')} />
+                <input type="number" onChange={handleDataChange(i, 'x')} />
               </td>
               <td>
-                <input type="number" value={row.y} onChange={handleDataChange(i, 'y')} />
+                <input type="number" onChange={handleDataChange(i, 'y')} />
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-
-      <Button sx={{ margin: 'auto' }} onClick={handleCalculate}>
+      <Button
+        sx={{ margin: 'auto', marginTop: '20px' }}
+        variant="contained"
+        onClick={handleCalculate}
+      >
         Calculate
       </Button>
       <TextField
+        sx={{
+          width: '60%',
+          justifyContent: 'center',
+          display: 'flex',
+          margin: 'auto',
+          marginTop: '20px',
+        }}
         id="filled-basic"
         label="Result"
         variant="filled"

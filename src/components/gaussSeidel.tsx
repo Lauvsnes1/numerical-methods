@@ -13,7 +13,7 @@ const MatrixInput: React.FC = () => {
   const handleCalculate = () => {
     //let tempMatrix = matrix;
 
-    const EPSILON = 1e-5; // Precision threshold
+    const EPSILON = 1e-4; // Precision threshold
     const MAX_ITERATIONS = 100; // Avoid infinite loop
 
     let n = matrix.length;
@@ -52,7 +52,9 @@ const MatrixInput: React.FC = () => {
     });
 
     console.log('solution:', x);
-    setResult(x);
+    if (x[0] && x[1]) {
+      setResult(x);
+    }
   };
 
   // useEffect to update matrix size when numberOfUnknowns changes
@@ -76,7 +78,7 @@ const MatrixInput: React.FC = () => {
 
   return (
     <Box sx={{ m: 2, display: 'flex', flexDirection: 'column' }}>
-      <Typography>Number of unknowns:</Typography>
+      <Typography variant="h6">Number of unknowns:</Typography>
       <Select
         labelId="unknowns-label"
         value={numberOfUnknowns}
@@ -89,7 +91,9 @@ const MatrixInput: React.FC = () => {
           </MenuItem>
         ))}
       </Select>
-      <Typography>Your matrix:</Typography>
+      <Typography sx={{ paddingTop: '20px' }} variant="h6">
+        Your matrix:
+      </Typography>
 
       <Grid container spacing={2} sx={{ mt: 2 }}>
         {matrix.map((row, i) =>
@@ -99,7 +103,7 @@ const MatrixInput: React.FC = () => {
               <TextField
                 type="number"
                 label={`[${i + 1},${j + 1}]`}
-                value={value}
+                //value={value}
                 onChange={handleMatrixChange(i, j)}
               />
             </Grid>
@@ -111,7 +115,7 @@ const MatrixInput: React.FC = () => {
       </Button>
       <Grid container spacing={2} sx={{ mt: 2 }}>
         {result.map((res, index) => (
-          <Grid item xs={12}>
+          <Grid item xs={12} key={index}>
             <TextField
               label={`X_${index}`}
               value={res}

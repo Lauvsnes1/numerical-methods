@@ -1,6 +1,6 @@
 import { Box, Button, TextField, Typography } from '@mui/material';
 import { MathNode, number, rationalize, round, simplify } from 'mathjs';
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 import InterpolationChart from './interPolationChart';
 
 interface DataRow {
@@ -14,6 +14,8 @@ const Interpolation = () => {
   const [data, setData] = useState<DataRow[]>([{ x: null, y: null }]);
   const [resultString, setResultString] = useState<string>('');
   const [equation, setEquation] = useState<MathNode>();
+  const [evalNum, setEvalNum] = useState<number>();
+  const [evalResult, setEvalRes] = useState<number>();
 
   const handleCalculate = () => {
     console.log('Data: ', data);
@@ -51,7 +53,16 @@ const Interpolation = () => {
       }
     }
     formatResult(result);
+    setEvalNum(0);
   };
+
+  useEffect(() => {
+    if (evalNum !== undefined) {
+      //When user update desired point, we evaluate the equation in that point
+      const result: number = equation?.evaluate({ x: evalNum });
+      setEvalRes(round(result, 4));
+    }
+  }, [evalNum]);
 
   //----------------------------------------------------------------------
 
@@ -86,6 +97,11 @@ const Interpolation = () => {
         setData(data.slice(0, newNumObservations));
       }
     }
+  };
+
+  const handleEvalNumber = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const number = parseFloat(e.target.value);
+    setEvalNum(number);
   };
 
   const handleDataChange =
@@ -154,7 +170,38 @@ const Interpolation = () => {
           readOnly: true,
         }}
       />
-      {resultString && <InterpolationChart equation={equation} dataPoints={data} />}
+      {resultString && (
+        <Box>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'center',
+              marginTop: '20px',
+            }}
+          >
+            <TextField
+              id="outlined-number"
+              label="Evaluate in point:"
+              type="number"
+              onChange={handleEvalNumber}
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+            <TextField
+              id="filled-basic"
+              label="Result"
+              variant="filled"
+              value={`p(${evalNum}) = ${evalResult}`}
+              InputProps={{
+                readOnly: true,
+              }}
+            />
+          </Box>
+          <InterpolationChart equation={equation} dataPoints={data} />{' '}
+        </Box>
+      )}
     </Box>
   );
 };

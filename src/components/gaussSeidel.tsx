@@ -11,50 +11,112 @@ const MatrixInput: React.FC = () => {
   const [result, setResult] = React.useState<number[]>([]);
 
   const handleCalculate = () => {
-    //let tempMatrix = matrix;
+    let tempMatrix: number[][] | null = matrix;
 
     const EPSILON = 1e-4; // Precision threshold
     const MAX_ITERATIONS = 100; // Avoid infinite loop
 
-    let n = matrix.length;
+    let n = tempMatrix.length;
     // Initial guess of 0's
     let x = new Array(n).fill(0);
 
-    for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
-      let x_new = Array.from(x); // Copy of solution
+    tempMatrix = handleRearrangeBruteForce(matrix);
+    console.log('TEMPMAT:', tempMatrix);
 
-      for (let i = 0; i < n; i++) {
-        let sum = matrix[i][n]; // The constant on the RHS of the equation
+    if (tempMatrix) {
+      for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
+        let x_new = Array.from(x); // Copy of solution
 
-        for (let j = 0; j < n; j++) {
-          if (i !== j) {
-            sum -= matrix[i][j] * x[j];
+        for (let i = 0; i < n; i++) {
+          let sum = tempMatrix[i][n];
+
+          for (let j = 0; j < n; j++) {
+            if (i !== j) {
+              sum -= tempMatrix[i][j] * x[j];
+            }
           }
+
+          // Update the value of our solution
+          x_new[i] = sum / tempMatrix[i][i];
         }
 
-        // Update the value of our solution
-        x_new[i] = sum / matrix[i][i];
+        // Compute the difference between two iterations(for convergence)
+        let diff = x_new.map((val, idx) => Math.abs(val - x[idx]));
+
+        // Check for convergence
+        if (Math.max(...diff) < EPSILON) {
+          console.log(`Converged after ${iter + 1} iterations`);
+          break;
+        }
+
+        x = x_new;
       }
-
-      // Compute the difference between two iterations(for convergence)
-      let diff = x_new.map((val, idx) => Math.abs(val - x[idx]));
-
-      // Check for convergence
-      if (Math.max(...diff) < EPSILON) {
-        console.log(`Converged after ${iter + 1} iterations`);
-        break;
-      }
-
-      x = x_new;
     }
+    console.log('solution:', x);
+    //Round solution 2 4 decimals
     x = x.map((result) => {
       return round(result, 4);
     });
 
-    console.log('solution:', x);
     if (x[0] && x[1]) {
       setResult(x);
     }
+  };
+
+  const isDiagonallyDominant = (matrix: number[][]): boolean => {
+    const n = matrix.length;
+    //Compute the gauss-seidel steps
+    for (let i = 0; i < n; i++) {
+      let sum = 0;
+      for (let j = 0; j < n; j++) {
+        if (i !== j) {
+          //calculate sum for all cells not in diagonal
+          sum += Math.abs(matrix[i][j]);
+        }
+      }
+      //Check if absolute value of diagonal is strictly smaller than the sum
+      if (Math.abs(matrix[i][i]) < sum) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  // Helper function to generate all permutations of an array
+  function permute<T>(arr: T[]): T[][] {
+    if (arr.length <= 1) return [arr];
+    let result: T[][] = [];
+    for (let i = 0; i < arr.length; i++) {
+      const rest = arr.slice(0, i).concat(arr.slice(i + 1));
+      const perms = permute(rest);
+      result = result.concat(perms.map((p) => [arr[i]].concat(p)));
+    }
+    return result;
+  }
+
+  const handleRearrangeBruteForce = (matrix: number[][]): number[][] | null => {
+    const n = matrix.length;
+    const submatrix: number[][] = matrix.map((row) => row.slice(0, n));
+    if (isDiagonallyDominant(submatrix)) {
+      return matrix;
+    }
+
+    // Generate all permutations of rows
+    const permutations = permute(matrix);
+    console.log('Permutations:', permutations);
+
+    for (let p of permutations) {
+      // remove last column to send square matrix for check
+      const submatrix: number[][] = p.map((row) => row.slice(0, n));
+      if (isDiagonallyDominant(submatrix)) {
+        // If this permutation is diagonally dominant, return
+        return p;
+      }
+    }
+
+    console.log('No solvable matrix found due to diagonal indominance');
+    alert('No solvable matrix found due to diagonal indominance');
+    return null;
   };
 
   // useEffect to update matrix size when numberOfUnknowns changes
@@ -110,7 +172,11 @@ const MatrixInput: React.FC = () => {
           ))
         )}
       </Grid>
-      <Button sx={{ margin: 'auto' }} onClick={handleCalculate}>
+      <Button
+        variant="contained"
+        sx={{ margin: 'auto', marginTop: '20px' }}
+        onClick={handleCalculate}
+      >
         Calculate
       </Button>
       <Grid container spacing={2} sx={{ mt: 2 }}>

@@ -16,6 +16,7 @@ const Interpolation = () => {
   const [equation, setEquation] = useState<MathNode>();
 
   const handleCalculate = () => {
+    console.log('Data: ', data);
     let completeEquation: string = '';
     //go though each data row
     for (let i = 0; i < data.length; i++) {
@@ -43,7 +44,7 @@ const Interpolation = () => {
     //If expression is small, we can rationalize the answer to more readable polynomial
     if (numObservations < 4) {
       try {
-        //result = rationalize(result);
+        result = rationalize(result);
       } catch (e) {
         console.log(e);
         console.log('could not rationalize');
@@ -72,7 +73,18 @@ const Interpolation = () => {
     if (value) {
       const newNumObservations = parseInt(e.target.value);
       setNumObservations(newNumObservations);
-      setData(Array.from({ length: newNumObservations }, () => ({ x: 1, y: 1 })));
+
+      if (newNumObservations > data.length) {
+        // if there are more observations than data points, add the difference
+        const newData = [...data];
+        for (let i = data.length; i < newNumObservations; i++) {
+          newData.push({ x: 1, y: 1 });
+        }
+        setData(newData);
+      } else {
+        // if there are less observations than data points, remove the difference
+        setData(data.slice(0, newNumObservations));
+      }
     }
   };
 

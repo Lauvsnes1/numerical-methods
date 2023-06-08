@@ -2,6 +2,8 @@ import React, { useState, ChangeEvent } from 'react';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import { TextField, Typography } from '@mui/material';
+import CostumLineChart from './lineChart';
+import { round } from 'mathjs';
 
 interface DataRow {
   x: number | null;
@@ -14,18 +16,20 @@ const LSM: React.FC = () => {
   const [data, setData] = useState<DataRow[]>([{ x: null, y: null }]);
   const [polynomialDegree, setPolynomialDegree] = useState<string>('one');
   const [result, setResult] = useState<string>('');
+  const [constants, setConstants] = useState<number[] | undefined>(undefined);
 
   const handleCalculate = () => {
     console.log('data:', data);
     switch (polynomialDegree) {
       case 'one':
         const { a, b } = handleDegreeOne();
-        console.log(a, b);
-        setResult('y = ' + b + 'x +' + a);
+        setConstants([a, b]);
+        setResult('y = ' + round(b, 4) + 'x +' + round(a, 4));
         break;
       case 'two':
         const { a_0, a_1, a_2 } = handleDegreeTwo();
-        setResult('y = ' + a_2 + 'x\u00B2 + ' + a_1 + 'x + ' + a_0);
+        setConstants([a_0, a_1, a_2]);
+        setResult('y = ' + round(a_2, 4) + 'x\u00B2 + ' + round(a_1, 4) + 'x + ' + round(a_0, 4));
 
         break;
     }
@@ -246,6 +250,7 @@ const LSM: React.FC = () => {
           readOnly: true,
         }}
       />
+      {constants && <CostumLineChart constants={constants} dataPoints={data} />}
     </div>
   );
 };

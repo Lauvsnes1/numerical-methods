@@ -54,12 +54,17 @@ const InterpolationChart = (props: { equation: MathNode | undefined; dataPoints:
 
     //Calculate the generated polynomial:
     if (props.equation) {
-      const mathEquation = simplify(props.equation);
+      const mathEquation = simplify(props.equation); //Convert back to MathNode object with simplify()
       //We evaluate in a given number of points
-      const lineData = Array.from({ length: maxX - minX + 1 }, (_, i) => ({
-        x: minX + i,
-        lineY: mathEquation.evaluate({ x: minX + i }), //Convert back to MathNode object with simplify()
-      }));
+      const step = 0.5;
+      const lineData = Array.from({ length: Math.ceil((maxX - minX) / step) }, (_, i) => {
+        const x = minX + i * step;
+        return {
+          x: x,
+          lineY: mathEquation.evaluate({ x: x }),
+        };
+      });
+
       mergeData(scatterData, lineData);
     }
   }, [props.equation]);

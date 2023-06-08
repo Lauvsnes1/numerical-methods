@@ -16,7 +16,7 @@ interface DataRow {
   y: number | null;
 }
 
-const CustomLineChart = (props: { constants: number[]; dataPoints: DataRow[] }) => {
+const RegressionChart = (props: { constants: number[]; dataPoints: DataRow[] }) => {
   const [data, setData] = useState<{ scatterY: number | null; x: number; lineY: number }[]>([]);
   const [xAxisDomain, setXAxisDomain] = useState<[number, number]>([0, 0]);
 
@@ -108,4 +108,4 @@ const CustomLineChart = (props: { constants: number[]; dataPoints: DataRow[] }) 
   );
 };
 
-export default CustomLineChart;
+export default RegressionChart;

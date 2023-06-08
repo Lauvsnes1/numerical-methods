@@ -2,7 +2,7 @@ import React, { useState, ChangeEvent } from 'react';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import { TextField, Typography } from '@mui/material';
-import CostumLineChart from './lineChart';
+import CostumLineChart from './regressionChart';
 import { round } from 'mathjs';
 
 interface DataRow {
@@ -207,7 +207,10 @@ const LSM: React.FC = () => {
           Two
         </Button>
       </ButtonGroup>
-      <table style={{ marginLeft: 'auto', marginRight: 'auto', paddingTop: '20px' }}>
+      <Typography sx={{ paddingTop: '20px' }} variant="h6">
+        Observations:
+      </Typography>
+      <table style={{ marginLeft: 'auto', marginRight: 'auto' }}>
         <thead>
           <tr>
             <th style={{ textAlign: 'left' }}>X</th>

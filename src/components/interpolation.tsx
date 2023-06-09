@@ -1,5 +1,5 @@
 import { Box, Button, TextField, Typography } from '@mui/material';
-import { MathNode, number, rationalize, round, simplify } from 'mathjs';
+import { MathNode, number, round, simplify } from 'mathjs';
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import InterpolationChart from './interPolationChart';
 
@@ -36,23 +36,37 @@ const Interpolation = () => {
       }
       completeEquation += `+ (${numerator}  / ${denominator}) * ${data[i].y}`;
     }
-    console.log('Complete equation:', completeEquation);
 
     //lets calculate the end product with algebraic calculator from mathjs
     let result = simplify(completeEquation);
-    console.log('simplified result:', result.toString());
     setEquation(result);
-    //If expression is small, we can rationalize the answer to more readable polynomial
-    if (numObservations < 4) {
-      try {
-        result = rationalize(result);
-      } catch (e) {
-        console.log(e);
-        console.log('could not rationalize');
-      }
+
+    //We call api with python SymPy to do simplify algebra
+    try {
+      // result = rationalize(result);
+      // formatResult(result);
+
+      const expression = result.toString();
+      //const encodedExpression = encodeURIComponent(expression);
+      const url = `https://murmuring-island-58455.herokuapp.com/simplify/`;
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ expression: expression }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log('response from api: ', data.simplified_expression);
+          return data;
+        })
+        .then((data) => formatAPIResult(data.simplified_expression));
+      setEvalNum(0);
+    } catch (e) {
+      console.log(e);
+      console.log('Could not hit API');
     }
-    formatResult(result);
-    setEvalNum(0);
   };
 
   useEffect(() => {
@@ -66,16 +80,28 @@ const Interpolation = () => {
 
   //----------------------------------------------------------------------
 
-  const formatResult = (result: MathNode) => {
-    let expression = result.toString();
-    const roundMatch = (match: string): string => String(round(parseFloat(match), 4));
-    const roundedExpression = expression
-      .replace(/[-+]?\d*\.\d+|\d+/g, roundMatch)
-      .replace(/\^ 2/g, '²')
-      .replace(/\^ 3/g, '³')
-      .replace(/\^ 4/g, '⁴')
-      .replace(/\^ 5/g, '⁵')
-      .replace(/\^ 6/g, '⁶')
+  // const formatResult = (result: MathNode) => {
+  //   let expression = result.toString();
+  //   const roundMatch = (match: string): string => String(round(parseFloat(match), 4));
+  //   const roundedExpression = expression
+  //     .replace(/[-+]?\d*\.\d+|\d+/g, roundMatch)
+  //     .replace(/\^ 2/g, '²')
+  //     .replace(/\^ 3/g, '³')
+  //     .replace(/\^ 4/g, '⁴')
+  //     .replace(/\^ 5/g, '⁵')
+  //     .replace(/\^ 6/g, '⁶')
+  //     .replace(/\*/g, '·');
+  //   setResultString(roundedExpression);
+  // };
+
+  const formatAPIResult = (resp: string) => {
+    const roundedExpression = resp
+      //.replace(/[-+]?\d*\.\d+|\d+/g, roundMatch)
+      .replace(/\*\*2/g, '²')
+      .replace(/\*\*3/g, '³')
+      .replace(/\*\*4/g, '⁴')
+      .replace(/\*\*5/g, '⁵')
+      .replace(/\*\*6/g, '⁶')
       .replace(/\*/g, '·');
     setResultString(roundedExpression);
   };

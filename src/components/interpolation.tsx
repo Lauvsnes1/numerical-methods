@@ -3,6 +3,7 @@ import { MathNode, number, round, simplify } from 'mathjs';
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import InterpolationChart from './interPolationChart';
 
+//Datarow is a row in input table
 interface DataRow {
   x: number | null;
   y: number | null;
@@ -10,7 +11,6 @@ interface DataRow {
 
 const Interpolation = () => {
   const [numObservations, setNumObservations] = useState(1);
-  // Initialize data with null values
   const [data, setData] = useState<DataRow[]>([{ x: null, y: null }]);
   const [resultString, setResultString] = useState<string>('');
   const [equation, setEquation] = useState<MathNode>();

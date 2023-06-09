@@ -20,6 +20,7 @@ const RegressionChart = (props: { constants: number[]; dataPoints: DataRow[] }) 
   const [data, setData] = useState<{ scatterY: number | null; x: number; lineY: number }[]>([]);
   const [xAxisDomain, setXAxisDomain] = useState<[number, number]>([0, 0]);
 
+  //Helper function to merge data
   const mergeData = (
     scatterData: {
       x: number;
@@ -56,10 +57,14 @@ const RegressionChart = (props: { constants: number[]; dataPoints: DataRow[] }) 
       const b = props.constants[1];
       const f = (x: number) => b * x + a;
 
-      const lineData = Array.from({ length: maxX - minX + 1 }, (_, i) => ({
-        x: minX + i,
-        lineY: f(minX + i),
-      }));
+      const step = 0.5;
+      const lineData = Array.from({ length: Math.ceil((maxX - minX) / step) }, (_, i) => {
+        const x = minX + i * step;
+        return {
+          x: x,
+          lineY: f(x),
+        };
+      });
 
       mergeData(scatterData, lineData);
     } else if (props.constants.length === 3) {
@@ -69,14 +74,18 @@ const RegressionChart = (props: { constants: number[]; dataPoints: DataRow[] }) 
       const a_2 = props.constants[2];
       const f = (x: number) => a_0 + a_1 * x + a_2 * x ** 2;
 
-      const lineData = Array.from({ length: maxX - minX + 1 }, (_, i) => ({
-        x: minX + i,
-        lineY: f(minX + i),
-      }));
+      const step = 0.5; // Smaller step means more points and a smoother graph
+      const lineData = Array.from({ length: Math.ceil((maxX - minX) / step) }, (_, i) => {
+        const x = minX + i * step;
+        return {
+          x: x,
+          lineY: f(x),
+        };
+      });
 
       mergeData(scatterData, lineData);
     }
-  }, [props.constants, props.dataPoints]);
+  }, [props.constants]);
 
   return (
     <Box

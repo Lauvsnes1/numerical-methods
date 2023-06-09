@@ -1,9 +1,9 @@
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, ChangeEvent, useEffect } from 'react';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
-import { TextField, Typography } from '@mui/material';
+import { Box, TextField, Typography } from '@mui/material';
 import CostumLineChart from './regressionChart';
-import { round } from 'mathjs';
+import { MathNode, round, simplify } from 'mathjs';
 
 interface DataRow {
   x: number | null;
@@ -17,6 +17,8 @@ const LSM: React.FC = () => {
   const [polynomialDegree, setPolynomialDegree] = useState<string>('one');
   const [result, setResult] = useState<string>('');
   const [constants, setConstants] = useState<number[] | undefined>(undefined);
+  const [evalNum, setEvalNum] = useState<number>();
+  const [evalResult, setEvalRes] = useState<number>();
 
   const handleCalculate = () => {
     console.log('data:', data);
@@ -150,12 +152,43 @@ const LSM: React.FC = () => {
     return x;
   }
 
+  //useEffect to update evaluated number
+  useEffect(() => {
+    if (evalNum !== undefined && constants) {
+      //convert back to MathNode with simplify object to evaluate
+      let equation: string | MathNode = '';
+      console.log('constants:', constants);
+      constants.length === 2
+        ? (equation = `${constants[0]} + ${constants[1]} * x`)
+        : (equation = `${constants[0]} + ${constants[1]} * x + ${constants[2]} * x^2`);
+      console.log('equation', equation, 'with type ', typeof equation);
+
+      equation = simplify(equation);
+      console.log('equation after', equation);
+      //When user update desired point, we evaluate the equation in that point
+      const evaluated: number = equation.evaluate({ x: evalNum });
+      setEvalRes(round(evaluated, 4));
+    }
+  }, [evalNum]);
+  // ---------------------------------------------------------------------
+
   const handleObservationsChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (value) {
       const newNumObservations = parseInt(e.target.value);
       setNumObservations(newNumObservations);
-      setData(Array.from({ length: newNumObservations }, () => ({ x: 1, y: 1 })));
+
+      if (newNumObservations > data.length) {
+        // if there are more observations than data points, add the difference
+        const newData = [...data];
+        for (let i = data.length; i < newNumObservations; i++) {
+          newData.push({ x: 1, y: 1 });
+        }
+        setData(newData);
+      } else {
+        // if there are less observations than data points, remove the difference
+        setData(data.slice(0, newNumObservations));
+      }
     }
   };
 
@@ -170,6 +203,11 @@ const LSM: React.FC = () => {
   const handlePolyDegree = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     const degree = event.currentTarget.value;
     setPolynomialDegree(degree);
+  };
+
+  const handleEvalNumber = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const number = parseFloat(e.target.value);
+    setEvalNum(number);
   };
 
   return (
@@ -253,7 +291,38 @@ const LSM: React.FC = () => {
           readOnly: true,
         }}
       />
-      {constants && <CostumLineChart constants={constants} dataPoints={data} />}
+      {constants && (
+        <Box>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'center',
+              marginTop: '20px',
+            }}
+          >
+            <TextField
+              id="outlined-number"
+              label="Evaluate in point:"
+              type="number"
+              onChange={handleEvalNumber}
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+            <TextField
+              id="filled-basic"
+              label="Result"
+              variant="filled"
+              value={`p(${evalNum}) = ${evalResult}`}
+              InputProps={{
+                readOnly: true,
+              }}
+            />
+          </Box>{' '}
+          <CostumLineChart constants={constants} dataPoints={data} />{' '}
+        </Box>
+      )}
     </div>
   );
 };

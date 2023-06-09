@@ -176,18 +176,20 @@ const LSM: React.FC = () => {
     const value = e.target.value;
     if (value) {
       const newNumObservations = parseInt(e.target.value);
-      setNumObservations(newNumObservations);
+      if (newNumObservations >= 1) {
+        setNumObservations(newNumObservations);
 
-      if (newNumObservations > data.length) {
-        // if there are more observations than data points, add the difference
-        const newData = [...data];
-        for (let i = data.length; i < newNumObservations; i++) {
-          newData.push({ x: 1, y: 1 });
+        if (newNumObservations > data.length) {
+          // if there are more observations than data points, add the difference
+          const newData = [...data];
+          for (let i = data.length; i < newNumObservations; i++) {
+            newData.push({ x: 1, y: 1 });
+          }
+          setData(newData);
+        } else {
+          // if there are less observations than data points, remove the difference
+          setData(data.slice(0, newNumObservations));
         }
-        setData(newData);
-      } else {
-        // if there are less observations than data points, remove the difference
-        setData(data.slice(0, newNumObservations));
       }
     }
   };
@@ -216,7 +218,7 @@ const LSM: React.FC = () => {
       <TextField
         id="outlined-number"
         type="number"
-        value={numObservations}
+        //value={numObservations}
         onChange={handleObservationsChange}
         InputLabelProps={{
           shrink: true,

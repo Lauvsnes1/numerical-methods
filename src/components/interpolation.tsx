@@ -61,6 +61,7 @@ const Interpolation = () => {
       const result: number = equation?.evaluate({ x: evalNum });
       setEvalRes(round(result, 4));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [evalNum]);
 
   //----------------------------------------------------------------------

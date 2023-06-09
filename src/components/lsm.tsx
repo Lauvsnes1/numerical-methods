@@ -169,6 +169,7 @@ const LSM: React.FC = () => {
       const evaluated: number = equation.evaluate({ x: evalNum });
       setEvalRes(round(evaluated, 4));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [evalNum]);
   // ---------------------------------------------------------------------
 

@@ -85,6 +85,7 @@ const RegressionChart = (props: { constants: number[]; dataPoints: DataRow[] }) 
 
       mergeData(scatterData, lineData);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.constants]);
 
   return (

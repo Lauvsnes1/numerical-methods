@@ -67,6 +67,7 @@ const InterpolationChart = (props: { equation: MathNode | undefined; dataPoints:
 
       mergeData(scatterData, lineData);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.equation]);
 
   return (

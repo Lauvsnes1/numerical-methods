@@ -21,7 +21,6 @@ const MatrixInput: React.FC = () => {
     let x = new Array(n).fill(0);
 
     tempMatrix = handleRearrangeBruteForce(matrix);
-    console.log('TEMPMAT:', tempMatrix);
 
     if (tempMatrix) {
       for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
@@ -35,20 +34,16 @@ const MatrixInput: React.FC = () => {
               sum -= tempMatrix[i][j] * x[j];
             }
           }
-
           // Update the value of our solution
           x_new[i] = sum / tempMatrix[i][i];
         }
-
         // Compute the difference between two iterations(for convergence)
         let diff = x_new.map((val, idx) => Math.abs(val - x[idx]));
-
         // Check for convergence
         if (Math.max(...diff) < EPSILON) {
           console.log(`Converged after ${iter + 1} iterations`);
           break;
         }
-
         x = x_new;
       }
     }
@@ -113,7 +108,6 @@ const MatrixInput: React.FC = () => {
         return p;
       }
     }
-
     console.log('No solvable matrix found due to diagonal indominance');
     alert('No solvable matrix found due to diagonal indominance');
     return null;

@@ -12,7 +12,6 @@ const MatrixInput: React.FC = () => {
 
   const handleCalculate = () => {
     let tempMatrix: number[][] | null = matrix;
-
     const EPSILON = 1e-4; // Precision threshold
     const MAX_ITERATIONS = 100; // Avoid infinite loop
 

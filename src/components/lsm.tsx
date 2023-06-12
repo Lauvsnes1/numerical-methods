@@ -20,7 +20,7 @@ const LSM: React.FC = () => {
   const [evalNum, setEvalNum] = useState<number>();
   const [evalResult, setEvalRes] = useState<number>();
 
-  const handleCalculate = () => {
+  const handleCalculate = async () => {
     console.log('data:', data);
     switch (polynomialDegree) {
       case 'one':
@@ -29,10 +29,9 @@ const LSM: React.FC = () => {
         setResult('y = ' + round(b, 4) + 'x +' + round(a, 4));
         break;
       case 'two':
-        const { a_0, a_1, a_2 } = handleDegreeTwo();
+        const { a_0, a_1, a_2 } = await handleDegreeTwo();
         setConstants([a_0, a_1, a_2]);
         setResult('y = ' + round(a_2, 4) + 'x\u00B2 + ' + round(a_1, 4) + 'x + ' + round(a_0, 4));
-
         break;
     }
   };
@@ -79,24 +78,45 @@ const LSM: React.FC = () => {
       }
     });
 
-    //Initialize the matrix to solve with gauss-jordan
+    //Initialize the matrix to solve with gauss-elimination to reduced row echolon form
     const tmpMatrix = [
       [numObservations, x_sum, x2_sum, y_sum],
       [x_sum, x2_sum, x3_sum, xy_sum],
       [x2_sum, x3_sum, x4_sum, x2y_sum],
     ];
     try {
-      const res = gaussianElimination(tmpMatrix);
-      console.log('res:', res);
-      if (res) {
-        const a_0 = res[0];
-        const a_1 = res[1];
-        const a_2 = res[2];
-        return { a_0, a_1, a_2 };
-      } else {
-        // Return default values if `res` is undefined
-        return { a_0: 0, a_1: 0, a_2: 0 };
-      }
+      //we solve it from an api call
+      const url = `https://murmuring-island-58455.herokuapp.com/rref/`;
+      return fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ matrix: tmpMatrix }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log('response from api: ', data.rref_matrix);
+          if (data.rref_matrix) {
+            const res = formatAPIResult(data.rref_matrix);
+            const a_0 = res[0];
+            const a_1 = res[1];
+            const a_2 = res[2];
+            return { a_0, a_1, a_2 };
+          } else {
+            console.log('No result from the API');
+            return { a_0: 0, a_1: 0, a_2: 0 };
+          }
+        })
+        .catch((error) => {
+          console.error(`Fetch Error: ${error}`);
+          return { a_0: 0, a_1: 0, a_2: 0 };
+        });
     } catch (e) {
       alert('Equation not solvable');
       console.log(e);
@@ -105,66 +125,18 @@ const LSM: React.FC = () => {
     }
   };
 
-  //We need to solve the linear equation system, so implemented Gaussian elimination
-  //not made by me
-  function gaussianElimination(matrix: number[][]): number[] | undefined {
-    let n = matrix.length;
-
-    for (let i = 0; i < n; i++) {
-      // Find maximum in column
-      let maxEl = Math.abs(matrix[i][i]),
-        maxRow = i;
-      for (let k = i + 1; k < n; k++) {
-        if (Math.abs(matrix[k][i]) > maxEl) {
-          maxEl = Math.abs(matrix[k][i]);
-          maxRow = k;
-        }
-      }
-
-      // Swap maximum row with current row
-      let tmp = matrix[maxRow];
-      matrix[maxRow] = matrix[i];
-      matrix[i] = tmp;
-
-      // No solutions if matrix[i][i] == 0
-      if (matrix[i][i] === 0) return undefined;
-
-      for (let k = i + 1; k < n; k++) {
-        let factor = matrix[k][i] / matrix[i][i];
-        for (let j = i; j < n + 1; j++) {
-          if (i === j) {
-            matrix[k][j] = 0;
-          } else {
-            matrix[k][j] -= factor * matrix[i][j];
-          }
-        }
-      }
-    }
-
-    // Solve equation for an upper triangular matrix
-    let x = new Array(n).fill(0);
-    for (let i = n - 1; i >= 0; i--) {
-      x[i] = matrix[i][n] / matrix[i][i];
-      for (let k = i - 1; k >= 0; k--) {
-        matrix[k][n] -= matrix[k][i] * x[i];
-      }
-    }
-    return x;
-  }
-
   //useEffect to update evaluated number
   useEffect(() => {
     if (evalNum !== undefined && constants) {
       //convert back to MathNode with simplify object to evaluate
       let equation: string | MathNode = '';
-      console.log('constants:', constants);
+      //We set the equation with constants
       constants.length === 2
         ? (equation = `${constants[0]} + ${constants[1]} * x`)
         : (equation = `${constants[0]} + ${constants[1]} * x + ${constants[2]} * x^2`);
-      console.log('equation', equation, 'with type ', typeof equation);
 
+      //Simplify to make more readable
       equation = simplify(equation);
-      console.log('equation after', equation);
       //When user update desired point, we evaluate the equation in that point
       const evaluated: number = equation.evaluate({ x: evalNum });
       setEvalRes(round(evaluated, 4));
@@ -194,6 +166,15 @@ const LSM: React.FC = () => {
       }
     }
   };
+  //Helper function to extract last column in the reduced row echolon
+  function formatAPIResult(matrixString: string): number[] {
+    // Remove "Matrix(" and ")" from the string and parse it into an array
+    const matrix = JSON.parse(matrixString.replace('Matrix(', '').replace(')', ''));
+
+    // Map each row of the matrix to its last element
+    const lastColumn = matrix.map((row: number[]) => row[row.length - 1]);
+    return lastColumn;
+  }
 
   const handleDataChange =
     (index: number, column: keyof DataRow) => (e: ChangeEvent<HTMLInputElement>) => {

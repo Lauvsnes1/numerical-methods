@@ -41,11 +41,8 @@ const Interpolation = () => {
     let result = simplify(completeEquation);
     setEquation(result);
 
-    //We call api with python SymPy to do simplify algebra
+    //We call api with python SymPy to simplify algebra
     try {
-      // result = rationalize(result);
-      // formatResult(result);
-
       const expression = result.toString();
       //const encodedExpression = encodeURIComponent(expression);
       const url = `https://murmuring-island-58455.herokuapp.com/simplify/`;

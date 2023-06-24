@@ -3,7 +3,7 @@ import { MathNode, number, round, simplify } from 'mathjs';
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import InterpolationChart from './interPolationChart';
 
-//Datarow is a row in input table
+//Datarows is a row in input table
 interface DataRow {
   x: number | null;
   y: number | null;

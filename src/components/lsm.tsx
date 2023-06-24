@@ -84,9 +84,10 @@ const LSM: React.FC = () => {
       [x_sum, x2_sum, x3_sum, xy_sum],
       [x2_sum, x3_sum, x4_sum, x2y_sum],
     ];
+    console.log('sending to API:', JSON.stringify({ matrix: tmpMatrix }));
     try {
       //we solve it from an api call
-      const url = `https://murmuring-island-58455.herokuapp.com/rref/`;
+      const url = 'https://sympy-api-2.onrender.com/rref/';
       return fetch(url, {
         method: 'POST',
         headers: {

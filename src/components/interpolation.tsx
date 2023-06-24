@@ -45,7 +45,7 @@ const Interpolation = () => {
     try {
       const expression = result.toString();
       //const encodedExpression = encodeURIComponent(expression);
-      const url = `https://murmuring-island-58455.herokuapp.com/simplify/`;
+      const url = `https://sympy-api-2.onrender.com/simplify/`;
       fetch(url, {
         method: 'POST',
         headers: {
@@ -76,20 +76,6 @@ const Interpolation = () => {
   }, [evalNum]);
 
   //----------------------------------------------------------------------
-
-  // const formatResult = (result: MathNode) => {
-  //   let expression = result.toString();
-  //   const roundMatch = (match: string): string => String(round(parseFloat(match), 4));
-  //   const roundedExpression = expression
-  //     .replace(/[-+]?\d*\.\d+|\d+/g, roundMatch)
-  //     .replace(/\^ 2/g, '²')
-  //     .replace(/\^ 3/g, '³')
-  //     .replace(/\^ 4/g, '⁴')
-  //     .replace(/\^ 5/g, '⁵')
-  //     .replace(/\^ 6/g, '⁶')
-  //     .replace(/\*/g, '·');
-  //   setResultString(roundedExpression);
-  // };
 
   const formatAPIResult = (resp: string) => {
     const roundedExpression = resp
